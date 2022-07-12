@@ -1,0 +1,298 @@
+.\" Man page for dbconv
+.\"
+.\" $Id"
+.\" $Log$
+.\"
+.\" (C) Jose R. Valverde (1991-2005)
+.\"
+
+.TH dbconv 1 "1991-2005" "dbconv v3.0" "Database format converter"
+.SH NAME
+dbconv \- convert a line-oriented database to separator-oriented format
+.SH SYNOPSIS
+dbconv [-r ref_file] [-d database] [-o output] [-f c] [-e c] [-1] [-q] [-h]
+.SH DESCRIPTION
+\fBdbconv\fP is a tool to convert a database structured as
+.PP
+.RS
+.nf
+FIELD1	1st field contents
+FIELD2	2nd field contents
+FIELD2	2nd field contents (continued)
+ ... etc ...
+EOR
+.fi
+.RE
+.PP
+i.e. with each field spanning one or more lines and preceded by the field
+name into a database where each record eats up only one line, with fields
+being separated by a special delimiter field.
+.PP
+.RS
+.nf
+1st field contents\\t2nd field contents 2nd field contents (continued)\\t ... etc ...
+.fi
+.RE
+.PP
+By default
+.B dbconv
+acts as a filter, reading the database file to be converted from its
+standard input and sending the converted data to its standard output.
+.PP
+The format of the input database is specified by a \fIreference file\fP which
+states how to identify records and fields (see below).
+.PP
+By default, \fBdbconv\fP assumes that the output format to use is \fBTab
+Delimited Format\fP (i.e. fields are separated by TAB characters with TAB
+characters not allowed within fields).
+.PP
+Command line options allow you to tweak the behaviour to suit your needs:
+you may change the output field and record separator characters, include 
+an initial description line with field metadata, or quote special characters
+to allow them inside fields.
+.SH OPTIONS
+.TP
+\fB\-c\fP \fIref_file\fP
+Specify configuration file containing the reference layout of the input
+database (default \fIDBconv.cf\fP). See below for more details.
+.TP
+\fB\-d\fP \fIdatabase\fP
+Database file to be converted (if unspecified, read from standard input)
+.TP
+\fB\-o\fP \fIoutput\fP
+Output file name (if not specified, use standard output)
+.TP
+\fB\-f\fP \fIdelimiter\fP
+Character to use as the field delimiter in the converted output file 
+(defaults to using a tabulator). Only the first character of the
+argument following \fB\-f\fP is considered. This option allows you
+to switch from a \fITab delimited\fP file to other formats like
+\fIComma Separated Values\fP (\fICSV\fP) by simply stating an alternate
+delimiter character (e.g. '\fI\-f ,\fP' for CSV).
+.TP
+\fB\-r\fP \fIdelimiter\fP
+Character to use as the record delimiter in the converted output file
+(default to using a line feed). Only the first character of the
+argument following \fB\-r\fP is considered.
+.TP
+\fB\-q\fP
+Escape special characters using double quotes. Special characters are
+the \fIoutput field and record separators\fP and \fIdouble quotes\fP (\fI"\fP) 
+themselves. Normally field and record separators should not appear within 
+the fields, but since
+we are converting between formats it is conceivable that they do. In this
+case, and if you select \fB\-q\fP, when a field contains delimiter (field or 
+record) characters, the entire field will be enclosed in double quotes, and 
+any double quotes that might appear within are escaped by doubling them. This
+allows you to conform with MS purported (and often unsupported by themselves)
+standards.
+.TP
+\fB\-1\fP
+Prepend a first record containing the field names. This is useful to carry
+the field name information over with the data when porting databases so you
+can tell which data corresponds with which field from this header record.
+.TP
+\fB\-h\fP
+Print a short usage summary and terse help on available options.
+.PP
+.SH CONFIGURATION FILE
+.IX Header "CONFIGURATION FILE"
+Input database file specifications are read from a configuration file, named
+by default \fBDBConv.cf\fP unless the \fB\-c file\fP option is used to 
+specify another one.
+.PP
+The configuration file describes how to identify records and fields within
+the input database file (i.e. the structure of the file) assuming it is a
+line oriented file where each field is stored in one or more lines, preceded
+by a field name tag in each of them. Records are separated by a special tag
+(which may be empty meaning an empty line).
+.PP
+Leading white space in the configuration file is ignored and may be used
+freely to format it in order to make it more readable.
+.PP
+The file and record identifiers are described each in a separate line
+starting with the tag string enclosed in double quotes (possibly after
+some white space), e.g. \fB"FIELD NAME"\fP. If the tag contains a double quote,
+it can be included by preceding it with a \fB\\\fP (escape) character, as in
+\fB"Field \\"2\\" here"\fP. If the \\ character itself must be included, it
+can be scaped by repeating it. Actually, \\ may scape any character. A tag
+may be and empty string (represented by \fB""\fP).
+.PP
+.IP "\fBRecord separator\fP" 4
+.IX Item "Record separator"
+The first specification in the configuration file must be that of the record
+separator. Following it (in separate, independent lines) go field 
+specifications.
+.PP
+.IP "\fBField specification\fP" 4
+.IX Item "Field specification"
+Field specifications follow after the initial record separator, each in its
+own line. The specification starts with the field identification tag (possibly
+after some white space which will be ignored) enclosed in double quotes as
+described above. This is the string of characters that identify this file
+contents in the input database file. 
+.br
+The tag may be optionally followed by
+a number which is interpreted as a recommended size for the field. This 
+number is not a hard limit, rather it is orientative, and if a field needs
+more space the program will adapt itself by allocating more space on the
+fly. In fact, the only reason for it is to increase performance in
+some cases, and you can normally do without it at all.
+.br
+Any other text following the tag and the optional number (if specified) will
+be ignored, which comes handy for adding comments to each field.
+.PP
+.IP "\fBComments\fP" 4
+.IX Item "Comments"
+You may intersperse blank lines and comments withing the file to document
+it. As we stated white spaces are ignored, and so are any lines that do not
+begin (after any blanks) with a double quote (the hallmark of a tag for a
+record or field definition).
+.PP
+.IP "\fBConfiguration file example\fP" 4
+.IX Item "Configuration file example"
+.RS
+.nf
+	First specification must be that of the record separator:
+" \\"Record\\\\separator\\" "
+Which would stand for the string [ "Record\\separator" ]
+
+	Field specifications may be followed by a recommended size:
+ "Field1"	125 chars
+ "Fld2: "	or not
+ " Fld3:"	if not followed by a number, rest of line is ignored
+
+	All of it may be interspersed by blank lines or comments 
+(lines not beginning -after any blanks- with a double quote).
+
+	If a quote is not closed then the rest of the line is taken 
+as the field name:
+	" Field #4: 125<EOL>
+	is taken as [ Field #4: 125<EOL>] (<EOL> means here the end 
+of line)
+
+	As an example this file would be interpreted as
+	[ "Record\\separator" ]
+	[Field1]
+	[Fld2: ]
+	[ Fld3:]
+	[ Field #4: 125<EOL>]
+.fi
+.RE
+.SH EXAMPLES
+The following examples should give you a feeling of what can be done:
+.PP
+.RS
+.nf
+cat database | dbconv > output
+.fi
+.RE
+.PP
+this example uses dbconv as a filter with all default options: it will
+read the data (formatted according to an existing \fIDBConv.cf\fR file)
+from stdin and output the results in stdout.
+.PP
+.RS
+.nf
+dbconv -c config -d database -o output 
+.fi
+.RE
+.PP
+This command would convert \fIdatabase\fR described by file \fIconfig\fR 
+to Tab-delimited format, storing the converted data in \fIoutput\fR.
+.PP
+.RS
+.nf
+dbconv -c config -d database -o output -f , -1 -q
+.fi
+.RE
+.PP
+Same as before, but in this case we generate a CSV file, with a header 
+record containing the field names, and quoting special characters when
+present (so it may be easily imported into e.g. Excel).
+.PP
+A much more elaborate example may be as follows: let's assume you want
+to generate a password database from an LDAP LDIF file. You might dump
+the required fields using \fIldapsearch\fP (1):
+.PP
+.RS
+.nf
+ldapsearch -LLL -h ldap.example.com \\
+    -D "cn=manager,dc=example,dc=com" \\
+    -b "ou=People,dc=example,dc=com" \\
+    uid userPassword uidNumber \\
+    gidNumber gecos loginShell homeDirectory \\
+    > database.ldif
+.fi
+.RE
+.PP
+Then create a configuration file named \fIDBConv.cf\fP for \fBdbconv\fP like
+.PP
+.RS
+.nf
+""
+"uid: "
+"userPassword:: "
+"uidNumber: "
+"gidNumber: "
+"gecos: "
+"loginShell: "
+"homeDirectory: "
+.fi
+.RE
+.PP
+i.e. records are separated by blank lines, and contain the above fields (no
+size hints are included).
+.PP
+Now invoke \fBdbconv\fP stating that you want fields separated by a colon
+'\fI:\fP' as in a password database:
+.PP
+.RS
+.nf
+dbconv -d database.ldif -o passwd.file -f :
+.fi
+.RE
+.PP
+and you should be (almost) done. This example doesn't actually fully work
+since the password would have been retireved base64 encoded from the LDAP
+server (hence the :: in the userPassword field), but you get the idea. The
+output of the command would indeed look something like
+.PP
+.RS
+.nf
+daemon:e2NyeXB0fXg=:11648:1:1:daemons,,,:/dev/null:/
+bin:e2NyeXB0fSo=:9724:2:2:System Tools Owner,,,:/dev/null:/bin
+ ...
+.fi
+.RE
+.PP
+.SH DIAGNOSTICS
+If all goes well, \fBdbconv\fP will exit with a 0 exit status.
+.PP
+The program will report on its standard error if there is any problem
+opening the required files and exit with an status condition of 1. 
+.PP
+Other internal error situations during processing, like problems reading
+or writing files, or allocating working memory will result in a premature
+end with an error exit condition of 2. In this case partial convertion
+results may be available on the output file.
+.SH AUTHOR
+Written by Jose R. Valverde <jrvalverde@acm.org>
+.SH BUGS
+Surely many.
+.PP
+Email bug reports to
+.BR jrvalverde@acm.org .
+Be sure to include the word \*(lqdbconv\*(rq somewhere in the
+\*(lqSubject:\*(rq field.
+.PP
+.PP
+.SH COPYRIGHT
+Copyright \(co 1991-2005 Jose R. Valverde
+.br
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+.SH "SEE ALSO"
+\fBtr\fP (1), \fBcut\fP (1), \fBsed\fP (1), \fBcol\fP (1), \fBexpand\fP (1),
+\fBunexpand\fP (1), \fBcmp\fP (1), \fBcomm\fP (1)
+

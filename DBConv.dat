@@ -1,0 +1,26 @@
+Fichero de definición del formato de salida de los
+registros de la Medline
+	1) Separador de registros:
+	""
+	2) Campos de los registros:
+	"AB: "		2056	Abstract
+	"AD: "		256	Address of Author
+	"AN: "		16	Medline accession number
+	"AU: "		256	Authors
+	"CN: "		128	Contract or Grant numbers
+	"CP: "		64	Country of publication
+	"ISSN: "	16	International Standard Serial number
+	"LA: "		64	Language
+	"MESH: "	512	Medical Subject Headings
+	"MJME: "	512	Major Medical Subject Headings
+	"MIME: "	512	Minor Medical Subject Headings
+	"NM: "		64	Name of substance
+	"PS: "		128	Personal Name as subject
+	"PY: "		16	Publication year
+	"RN: "		64	CAS registry number or EC number
+	"SB: "		128	Subset
+	"SO: "		256	Source (Bibliographic citation)
+	"TI: "		512	Title
+	"TO: "		512	Original title
+	"UD: "		64	Update code
+
